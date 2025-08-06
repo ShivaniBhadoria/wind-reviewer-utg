@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub PR Review Tool</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub PR Review Tool</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="config">Configuration</div>
+            <div class="tab" data-tab="files">Files</div>
+            <div class="tab" data-tab="comments">Comments</div>
+        </div>
+        
+        <div class="tab-content active" id="config-tab">
+            <div class="form-group">
+                <label for="owner">Repository Owner:</label>
+                <input type="text" id="owner" value="ShivaniBhadoria">
+            </div>
+            
+            <div class="form-group">
+                <label for="repo">Repository Name:</label>
+                <input type="text" id="repo" value="personal-finance-simulator">
+            </div>
+            
+            <div class="form-group">
+                <label for="prNumber">Pull Request Number:</label>
+                <input type="number" id="prNumber" value="4">
+            </div>
+            
+            <div class="form-group">
+                <label for="token">GitHub Token (optional):</label>
+                <input type="password" id="token" placeholder="Enter your GitHub token">
+                <small>Note: Token is only needed if you're not using the Windsurf IDE environment</small>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="files-tab">
+            <h3>Changed Files</h3>
+            <div id="filesList">
+                <div class="info">No files loaded yet. Run "Get PR Details" first.</div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="comments-tab">
+            <h3>Review Comments</h3>
+            <div id="commentsList">
+                <div class="info">No comments generated yet. Run "Review PR" first.</div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="checkMCP">Check MCP Tools</button>
+            <button id="getPR" disabled>Get PR Details</button>
+            <button id="reviewPR" disabled>Review PR</button>
+            <span id="loadingIndicator" class="loading hidden"></span>
+        </div>
+        
+        <div id="output">Results will appear here...</div>
+    </div>
+    
+    <script src="js/app.js"></script>
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and tab contents
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
