@@ -15,11 +15,51 @@
 
 <!-- Describe the design and overall changes in detail. Refer to specific file or code changes -->
 
-Include list of UIB changes like,
-- [ ] New components or Data Visualizations
+### Change Type
+<!-- Select one and delete the sections that don't apply to your PR -->
+- [ ] Frontend
+- [ ] Backend
+- [ ] Both
+
+<!-- DELETE THIS SECTION IF YOUR PR IS BACKEND-ONLY -->
+### Frontend Changes
+<!-- For each checked item, provide specific details about what you changed -->
+<!-- UI Behaviour examples: Conditional rendering, animations, transitions -->
+- [ ] UI Behaviour
+<!-- State Management examples: Redux, Context API, RxJS, form state validation -->
+- [ ] State Management
+<!-- Validation Logic examples: Client-side validation, error display -->
+- [ ] Validation Logic
+<!-- Accessibility examples: ARIA roles, keyboard navigation, screen reader support -->
+- [ ] Accessibility
+<!-- Responsive Design examples: Mobile/tablet/desktop behaviour -->
+- [ ] Responsive Design
+<!-- Cross-Browser examples: List tested browsers and known issues -->
+- [ ] Cross-Browser Compatibility
+<!-- Client Scripts examples: Enhanced form handling, validation -->
 - [ ] Client Scripts
+<!-- Data Visualizations examples: Charts, graphs, dashboards -->
+- [ ] Data Visualizations
+
+<!-- DELETE THIS SECTION IF YOUR PR IS FRONTEND-ONLY -->
+### Backend Changes
+<!-- For each checked item, provide specific details about what you changed -->
+<!-- API Changes examples: New endpoints, modified contracts, versioning -->
+- [ ] API Changes
+<!-- Business Logic examples: Core processing, validation, workflows -->
+- [ ] Business Logic
+<!-- Database Impact examples: Schema changes, migrations, queries -->
+- [ ] Database Impact
+<!-- Security examples: Auth, input validation, rate limiting -->
+- [ ] Security Considerations
+<!-- Performance examples: Caching, async processing -->
+- [ ] Performance Optimisations
+<!-- Error Handling examples: Logging, retries, fallback mechanisms -->
+- [ ] Error Handling Strategy
+<!-- Script Includes examples: Reusable logic, API usage examples -->
+- [ ] Script Includes
+<!-- Data Resources examples: New data sources, integrations -->
 - [ ] Data Resources
-- [ ] Script Includes (also any helpful examples on API usage, sample payloads, etc)
 
 ## Tests
 
