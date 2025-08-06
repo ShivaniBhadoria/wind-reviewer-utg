@@ -132,10 +132,136 @@ async function reviewPullRequest(owner, repo, prNumber, options = {}) {
     }
 }
 
-// Export the main function
-module.exports = { reviewPullRequest };
+/**
+ * Update comments on a pull request
+ * @param {string} owner - Repository owner
+ * @param {string} repo - Repository name
+ * @param {number} prNumber - Pull request number
+ * @param {Array} updatedComments - Array of comment objects with updated content
+ */
+async function updatePRComments(owner, repo, prNumber, updatedComments) {
+    try {
+        console.log(`Updating comments for PR #${prNumber} in ${owner}/${repo}`);
+        
+        // Get PR details for the commit SHA
+        const pr = await mcp0_get_pull_request({
+            owner,
+            repo,
+            pullNumber: prNumber
+        });
+        
+        // Create a new pending review
+        await mcp0_create_pending_pull_request_review({
+            owner,
+            repo,
+            pullNumber: prNumber,
+            commitID: pr.head.sha
+        });
+        
+        // Add all updated comments
+        console.log(`Adding ${updatedComments.length} updated comments...`);
+        for (const comment of updatedComments) {
+            await mcp0_add_comment_to_pending_review({
+                owner,
+                repo,
+                pullNumber: prNumber,
+                path: comment.path,
+                body: comment.body,
+                subjectType: comment.subjectType || "FILE",
+                line: comment.line,
+                side: comment.side || "RIGHT"
+            });
+        }
+        
+        // Submit the review with updated comments
+        await mcp0_submit_pending_pull_request_review({
+            owner,
+            repo,
+            pullNumber: prNumber,
+            event: "COMMENT",
+            body: `I've updated my review with ${updatedComments.length} comments.`
+        });
+        
+        console.log(`Review updated with ${updatedComments.length} comments.`);
+    } catch (error) {
+        console.error('Error updating PR comments:', error);
+        throw error;
+    }
+}
+
+/**
+ * Update a specific PR comment by ID
+ * @param {string} owner - Repository owner
+ * @param {string} repo - Repository name
+ * @param {number} prNumber - Pull request number
+ * @param {number} commentId - ID of the comment to update
+ * @param {string} newBody - New content for the comment
+ */
+async function updatePRComment(owner, repo, prNumber, commentId, newBody) {
+    try {
+        console.log(`Updating comment ${commentId} for PR #${prNumber} in ${owner}/${repo}`);
+        
+        // First, get all PR comments to find the one to update
+        const comments = await mcp0_get_pull_request_comments({
+            owner,
+            repo,
+            pullNumber: prNumber
+        });
+        
+        // Find the specific comment
+        const commentToUpdate = comments.find(comment => comment.id === commentId);
+        
+        if (!commentToUpdate) {
+            throw new Error(`Comment with ID ${commentId} not found`);
+        }
+        
+        // Create a pending review
+        await mcp0_create_pending_pull_request_review({
+            owner,
+            repo,
+            pullNumber: prNumber,
+            commitID: commentToUpdate.commit_id
+        });
+        
+        // Add the updated comment
+        await mcp0_add_comment_to_pending_review({
+            owner,
+            repo,
+            pullNumber: prNumber,
+            path: commentToUpdate.path,
+            body: newBody,
+            subjectType: commentToUpdate.position ? "LINE" : "FILE",
+            line: commentToUpdate.position,
+            side: commentToUpdate.side || "RIGHT"
+        });
+        
+        // Submit the review with the updated comment
+        await mcp0_submit_pending_pull_request_review({
+            owner,
+            repo,
+            pullNumber: prNumber,
+            event: "COMMENT",
+            body: "Updated review comment"
+        });
+        
+        console.log(`Comment ${commentId} updated successfully.`);
+    } catch (error) {
+        console.error('Error updating PR comment:', error);
+        throw error;
+    }
+}
+
+// Export the functions
+module.exports = { reviewPullRequest, updatePRComments, updatePRComment };
 
 // Example usage (uncomment to test):
 // reviewPullRequest('owner', 'repo', 123, {})
 //     .then(() => console.log('Review completed'))
 //     .catch(err => console.error('Review failed:', err));
+//
+// Example for updating comments:
+// updatePRComments('owner', 'repo', 123, [
+//     { path: 'file.js', body: 'Updated comment', subjectType: 'FILE' }
+// ])
+//     .then(() => console.log('Comments updated'))
+//     .catch(err => console.error('Update failed:', err));
