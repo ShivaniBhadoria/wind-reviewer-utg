@@ -18,10 +18,10 @@ if (args.length < 3) {
 
 const [owner, repo, prNumber] = args;
 
-// Path to the review-pr.js file
-const reviewToolPath = path.join(__dirname, 'backend', 'pr-review', 'review-pr.js');
+// Path to the direct-pr-review.js file (advanced PR review tool)
+const reviewToolPath = path.join(__dirname, 'backend', 'pr-review', 'direct-pr-review.js');
 
-console.log(`Running PR review for ${owner}/${repo}#${prNumber}...`);
+console.log(`Running advanced PR review for ${owner}/${repo}#${prNumber}...`);
 
 // Spawn the PR review process
 const reviewProcess = spawn('node', [reviewToolPath, owner, repo, prNumber], {
