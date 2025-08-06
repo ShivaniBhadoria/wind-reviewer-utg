@@ -41,17 +41,33 @@ async function reviewPullRequest() {
       return;
     }
     
-    // 3. Create a pending review
-    console.log('Creating pending review...');
-    const { data: review } = await octokit.pulls.createReview({
-      owner,
-      repo,
-      pull_number: prNumber
-    });
-    
     // 4. Analyze files and add comments
     console.log('Analyzing changes...');
     const comments = [];
+    
+    // Check PR description for template compliance
+    const prBody = pr.body || '';
+    const templateChecks = [
+      { pattern: /@dev\/vault-dev/, message: "Please tag the reviewers with @dev/vault-dev" },
+      { pattern: /\[STRY\d+\]/, message: "Please include the STRY number in the format [STRY12345]" },
+      { pattern: /## Overview/, message: "Please include an Overview section in your PR description" },
+      { pattern: /## What has changed/, message: "Please include a 'What has changed' section in your PR description" },
+      { pattern: /### Change Type/, message: "Please specify the Change Type (Frontend/Backend/Both) in your PR description" },
+      { pattern: /## Tests/, message: "Please include a Tests section in your PR description" }
+    ];
+    
+    const missingTemplateItems = templateChecks.filter(check => !check.pattern.test(prBody));
+    
+    if (missingTemplateItems.length > 0) {
+      // Add a comment about missing template items
+      await octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: prNumber,
+        body: `### PR Template Compliance Check\n\nPlease update your PR description to include the following missing items:\n\n${missingTemplateItems.map(item => `- ${item.message}`).join('\n')}`
+      });
+      console.log('Added comment about missing template items');
+    }
     
     for (const file of files) {
       // Example: Check for large files
@@ -79,34 +95,92 @@ async function reviewPullRequest() {
       }
     }
     
-    // 5. Submit the review with comments
+    // Try to create a review with comments if we have any
     if (comments.length > 0) {
-      console.log(`Submitting review with ${comments.length} comments...`);
-      await octokit.pulls.submitReview({
-        owner,
-        repo,
-        pull_number: prNumber,
-        review_id: review.id,
-        event: "COMMENT",
-        body: `I've reviewed your PR. Found ${comments.length} items to review.`,
-        comments: comments
-      });
-      console.log(`Review submitted with ${comments.length} comments.`);
+      try {
+        console.log('Creating pending review...');
+        const { data: review } = await octokit.pulls.createReview({
+          owner,
+          repo,
+          pull_number: prNumber
+        });
+        
+        console.log(`Submitting review with ${comments.length} comments...`);
+        await octokit.pulls.submitReview({
+          owner,
+          repo,
+          pull_number: prNumber,
+          review_id: review.id,
+          event: "COMMENT",
+          body: `I've reviewed your PR. Found ${comments.length} items to review.`,
+          comments: comments
+        });
+        console.log(`Review submitted with ${comments.length} comments.`);
+      } catch (reviewError) {
+        console.log('Could not create a review with comments. Adding comments individually...');
+        
+        // Fallback: Add individual comments if review creation fails
+        for (const comment of comments) {
+          try {
+            await octokit.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: `**File: ${comment.path}, Line: ${comment.line}**\n\n${comment.body}`
+            });
+          } catch (commentError) {
+            console.error('Error adding individual comment:', commentError.message);
+          }
+        }
+      }
     } else {
-      // No comments to add, approve the PR
-      await octokit.pulls.submitReview({
-        owner,
-        repo,
-        pull_number: prNumber,
-        review_id: review.id,
-        event: "APPROVE",
-        body: "✅ Looks good to me! No issues found in the review."
-      });
-      console.log('PR approved with no comments.');
+      // No code issues found
+      try {
+        console.log('Creating pending review for approval...');
+        const { data: review } = await octokit.pulls.createReview({
+          owner,
+          repo,
+          pull_number: prNumber
+        });
+        
+        // No comments to add, approve the PR
+        await octokit.pulls.submitReview({
+          owner,
+          repo,
+          pull_number: prNumber,
+          review_id: review.id,
+          event: "APPROVE",
+          body: "✅ Looks good to me! No issues found in the review."
+        });
+        console.log('PR approved with no comments.');
+      } catch (approveError) {
+        console.log('Could not create a review for approval. Adding a comment instead...');
+        
+        // Fallback: Add a comment if review creation fails
+        await octokit.issues.createComment({
+          owner,
+          repo,
+          issue_number: prNumber,
+          body: "✅ Code review complete. No issues found in the review."
+        });
+      }
     }
     
   } catch (error) {
-    console.error('Error during PR review:', error);
+    console.error('Error during PR review:', error.message);
+    
+    // Try to add a comment about the error
+    try {
+      await octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: prNumber,
+        body: `⚠️ The automated review encountered an error: ${error.message}`
+      });
+    } catch (commentError) {
+      console.error('Could not add error comment:', commentError.message);
+    }
+    
     process.exit(1);
   }
 }
@@ -114,6 +188,6 @@ async function reviewPullRequest() {
   // Run the review
   await reviewPullRequest();
 })().catch(error => {
-  console.error('Error during initialization:', error);
+  console.error('Error during initialization:', error.message);
   process.exit(1);
 });
