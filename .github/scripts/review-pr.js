@@ -1,10 +1,15 @@
 // Automated PR Review Script
-const { Octokit } = require('@octokit/rest');
+// Using dynamic import for ES Module
 
-// Initialize Octokit with GitHub token
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN
-});
+// We'll use an async IIFE to handle the dynamic import
+(async () => {
+  // Import Octokit using dynamic import
+  const { Octokit } = await import('@octokit/rest');
+
+  // Initialize Octokit with GitHub token
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
+  });
 
 // Get environment variables
 const prNumber = parseInt(process.env.PR_NUMBER);
@@ -106,5 +111,9 @@ async function reviewPullRequest() {
   }
 }
 
-// Run the review
-reviewPullRequest();
+  // Run the review
+  await reviewPullRequest();
+})().catch(error => {
+  console.error('Error during initialization:', error);
+  process.exit(1);
+});
