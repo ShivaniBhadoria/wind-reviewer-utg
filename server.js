@@ -1,7 +1,8 @@
-// Enhanced HTTP server to serve our PR review tool frontend
+// Enhanced HTTP server to serve our PR review tool frontend and start the stats server
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 const PORT = 3001;
 
@@ -58,6 +59,20 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
+  console.log(`Main server running at http://localhost:${PORT}/`);
   console.log('Open this URL in the Windsurf IDE browser preview to test the GitHub PR Review Tool');
+  
+  // Start the repository statistics server
+  const statsServerPath = path.join(__dirname, 'backend', 'stats', 'repo-stats-server.js');
+  console.log('Starting Repository Statistics Server...');
+  
+  const statsServer = spawn('node', [statsServerPath], {
+    stdio: 'inherit'
+  });
+  
+  statsServer.on('close', (code) => {
+    console.log(`Repository Statistics Server exited with code ${code}`);
+  });
+  
+  console.log('Repository Statistics Server started.');
 });

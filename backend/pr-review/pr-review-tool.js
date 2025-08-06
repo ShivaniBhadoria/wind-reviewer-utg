@@ -1,18 +1,28 @@
 // PR Review Tool using GitHub MCP Server
 // This tool helps review pull requests and leave comments
 
-// Import MCP server tools directly
-// These are provided by the Windsurf IDE's MCP server
-const { 
-    mcp0_get_pull_request, 
-    mcp0_get_pull_request_files, 
-    mcp0_create_pending_pull_request_review, 
-    mcp0_add_comment_to_pending_review,
-    mcp0_submit_pending_pull_request_review 
-} = global.mcp || {};
+// In Cascade, we don't need to import MCP tools from global.mcp
+// Instead, we'll use the function calls directly
 
-if (!mcp0_get_pull_request) {
-    throw new Error('GitHub MCP server tools are not available. Make sure the GitHub MCP server is running.');
+// Define wrapper functions to make the code more readable
+async function mcp0_get_pull_request(params) {
+    return await global.mcp0_get_pull_request(params);
+}
+
+async function mcp0_get_pull_request_files(params) {
+    return await global.mcp0_get_pull_request_files(params);
+}
+
+async function mcp0_create_pending_pull_request_review(params) {
+    return await global.mcp0_create_pending_pull_request_review(params);
+}
+
+async function mcp0_add_comment_to_pending_review(params) {
+    return await global.mcp0_add_comment_to_pending_review(params);
+}
+
+async function mcp0_submit_pending_pull_request_review(params) {
+    return await global.mcp0_submit_pending_pull_request_review(params);
 }
 
 /**

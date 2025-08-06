@@ -14,6 +14,27 @@ const {
     COMMENT_TYPES 
 } = require('./pr-review-tool');
 
+// Define direct access to MCP tools for this script
+async function mcp0_get_pull_request(params) {
+    return await global.mcp0_get_pull_request(params);
+}
+
+async function mcp0_get_pull_request_files(params) {
+    return await global.mcp0_get_pull_request_files(params);
+}
+
+async function mcp0_create_pending_pull_request_review(params) {
+    return await global.mcp0_create_pending_pull_request_review(params);
+}
+
+async function mcp0_add_comment_to_pending_review(params) {
+    return await global.mcp0_add_comment_to_pending_review(params);
+}
+
+async function mcp0_submit_pending_pull_request_review(params) {
+    return await global.mcp0_submit_pending_pull_request_review(params);
+}
+
 // Get command line arguments
 const args = process.argv.slice(2);
 
@@ -231,175 +252,76 @@ async function addDirectPRComments(owner, repo, prNumber) {
         
         // Helper function to format comments in the requested format - SonarQube style
         function formatComment({ issue, context, suggestion, codeExamples, lineSuggestions, lineContent, actionItems, tldr }) {
-            // Start with the issue description
-            let comment = `**Issue:** ${issue || ''}\n\n`;
+            // Start with a clean, consistent template format
+            let comment = `**Issue:** ${issue || 'Code Improvement Opportunity'}\n\n`;
             
-            // Add context if provided
+            // Add context if provided - keep it concise
             if (context) {
                 comment += `**Context:** ${context}\n\n`;
             }
             
-            // Add suggestion if provided
+            // Add suggestion if provided - focus on the "why" not just the "what"
             if (suggestion) {
                 comment += `**Suggestion:** ${suggestion}\n\n`;
             }
             
-            // Add code examples if provided
-            if (codeExamples && codeExamples.length > 0) {
-                comment += `**Code Examples:**\n\n`;
-                codeExamples.forEach(example => {
-                    comment += `\`\`\`javascript\n${example}\n\`\`\`\n\n`;
-                });
-            }
-            
-            // Add multiple GitHub suggestion blocks if provided
-            if (lineSuggestions && lineContent) {
-                comment += `**GitHub Suggestions:**\n\n`;
-                const originalLines = lineContent.trim().split('\n');
-                const suggestionKeys = Object.keys(lineSuggestions);
-                
-                // If we have multiple suggestions, add them all with labels
-                if (suggestionKeys.length > 1) {
-                    suggestionKeys.forEach((key, index) => {
+            // Always include a GitHub suggestion block for easy commits when line content is available
+            if (lineContent) {
+                // If we have specific line suggestions
+                if (lineSuggestions && Object.keys(lineSuggestions).length > 0) {
+                    const originalLines = lineContent.trim().split('\n');
+                    const suggestionKeys = Object.keys(lineSuggestions);
+                    
+                    // Single suggestion - make it simple and directly committable
+                    if (suggestionKeys.length === 1) {
+                        const key = suggestionKeys[0];
                         const suggestedLines = lineSuggestions[key].trim().split('\n');
                         
-                        // Find the exact line that needs changing
-                        let targetLineIndex = -1;
-                        let contextLinesBefore = 0;
-                        let contextLinesAfter = 0;
+                        // Create a GitHub suggestion block with the complete code that can be committed
+                        comment += `\`\`\`suggestion\n${suggestedLines.join('\n')}\n\`\`\`\n\n`;
+                        comment += `*You can commit this suggestion directly by clicking the commit button above.*\n\n`;
+                    } else {
+                        // Multiple suggestions - present them as options
+                        comment += `**Recommended Changes:**\n\n`;
                         
-                        // First try to find the exact line containing the key
-                        for (let i = 0; i < originalLines.length; i++) {
-                            if (originalLines[i].includes(key)) {
-                                targetLineIndex = i;
-                                break;
-                            }
-                        }
-                        
-                        // If we found the target line, create a micro-suggestion with minimal context
-                        if (targetLineIndex >= 0) {
-                            // Determine how many context lines to include (0-1 lines of context)
-                            contextLinesBefore = Math.min(1, targetLineIndex);
-                            contextLinesAfter = Math.min(1, originalLines.length - targetLineIndex - 1);
+                        suggestionKeys.forEach((key, index) => {
+                            const suggestedLines = lineSuggestions[key].trim().split('\n');
                             
-                            // Extract just the specific line and minimal context
-                            const startLine = targetLineIndex - contextLinesBefore;
-                            const endLine = targetLineIndex + contextLinesAfter;
-                            
-                            // Create minimal original and suggested code blocks
-                            const minimalOriginal = originalLines.slice(startLine, endLine + 1).join('\n');
-                            const minimalSuggested = suggestedLines.slice(startLine, endLine + 1).join('\n');
+                            // Find the smallest possible diff for clean suggestions
+                            // But ensure we always have actual code that can be committed
+                            const diffLines = findSmallestDiff(originalLines, suggestedLines);
+                            const suggestionCode = diffLines.length > 0 ? diffLines.join('\n') : suggestedLines.join('\n');
                             
                             comment += `**Option ${index + 1}:**\n`;
-                            comment += `\`\`\`suggestion\n${minimalSuggested}\n\`\`\`\n\n`;
-                        } else {
-                            // If we can't find the exact line, find the smallest possible diff
-                            const diffLines = findSmallestDiff(originalLines, suggestedLines);
-                            if (diffLines.length > 0 && diffLines.length <= 3) {
-                                // Use the small diff if it's 3 lines or fewer
-                                comment += `**Option ${index + 1}:**\n`;
-                                comment += `\`\`\`suggestion\n${diffLines.join('\n')}\n\`\`\`\n\n`;
-                            } else {
-                                // Fallback to single line change if diff is too large
-                                const firstDiffIndex = findFirstDifferentLineIndex(originalLines, suggestedLines);
-                                if (firstDiffIndex >= 0 && firstDiffIndex < suggestedLines.length) {
-                                    comment += `**Option ${index + 1}:**\n`;
-                                    comment += `\`\`\`suggestion\n${suggestedLines[firstDiffIndex]}\n\`\`\`\n\n`;
-                                } else {
-                                    // Last resort - use minimal changes but limit to 3 lines max
-                                    const minimalSuggestion = extractMinimalChanges(originalLines, suggestedLines);
-                                    const limitedSuggestion = minimalSuggestion.split('\n').slice(0, 3).join('\n');
-                                    
-                                    comment += `**Option ${index + 1}:**\n`;
-                                    comment += `\`\`\`suggestion\n${limitedSuggestion}\n\`\`\`\n\n`;
-                                }
-                            }
-                        }
-                    });
-                    
-                    // Add explanation about the suggestion blocks
-                    comment += `*You can commit any suggestion directly by clicking its commit button, add it to a batch of changes, or reject it by clicking the "Don't commit" button.*\n\n`;
-                    comment += `*To apply multiple suggestions as a single commit, use "Add suggestion to batch" for each suggestion you want to include, then commit the batch.*\n\n`;
-                } else if (suggestionKeys.length === 1) {
-                    // Just one suggestion - make it ultra-focused
-                    const key = suggestionKeys[0];
-                    const suggestedLines = lineSuggestions[key].trim().split('\n');
-                    
-                    // Find the exact line that needs changing
-                    let targetLineIndex = -1;
-                    
-                    // First try to find the exact line containing the key
-                    for (let i = 0; i < originalLines.length; i++) {
-                        if (originalLines[i].includes(key)) {
-                            targetLineIndex = i;
-                            break;
-                        }
+                            comment += `\`\`\`suggestion\n${suggestionCode}\n\`\`\`\n\n`;
+                        });
+                        
+                        comment += `*You can commit any suggestion directly by clicking its commit button.*\n\n`;
                     }
-                    
-                    // If we found the target line, create a micro-suggestion
-                    if (targetLineIndex >= 0 && targetLineIndex < suggestedLines.length) {
-                        // Just use the single line that needs changing
-                        const suggestedLine = suggestedLines[targetLineIndex];
-                        comment += `\`\`\`suggestion\n${suggestedLine}\n\`\`\`\n\n`;
-                    } else {
-                        // Find the smallest possible diff (max 3 lines)
-                        const diffLines = findSmallestDiff(originalLines, suggestedLines);
-                        if (diffLines.length > 0 && diffLines.length <= 3) {
-                            comment += `\`\`\`suggestion\n${diffLines.join('\n')}\n\`\`\`\n\n`;
-                        } else {
-                            // Fallback to single line change
-                            const firstDiffIndex = findFirstDifferentLineIndex(originalLines, suggestedLines);
-                            if (firstDiffIndex >= 0 && firstDiffIndex < suggestedLines.length) {
-                                comment += `\`\`\`suggestion\n${suggestedLines[firstDiffIndex]}\n\`\`\`\n\n`;
-                            } else {
-                                // Last resort - use minimal changes but limit to 3 lines max
-                                const minimalSuggestion = extractMinimalChanges(originalLines, suggestedLines);
-                                const limitedSuggestion = minimalSuggestion.split('\n').slice(0, 3).join('\n');
-                                comment += `\`\`\`suggestion\n${limitedSuggestion}\n\`\`\`\n\n`;
-                            }
-                        }
-                    }
-                    
-                    comment += `*You can commit this suggestion directly by clicking the commit button above, or reject it by clicking the "Don't commit" button.*\n\n`;
+                } else {
+                    // If we don't have specific line suggestions but we do have line content,
+                    // create a general suggestion based on the entire content
+                    comment += `\`\`\`suggestion\n${lineContent}\n\`\`\`\n\n`;
+                    comment += `*You can commit this suggestion directly by clicking the commit button above.*\n\n`;
                 }
             }
             
-            // Add additional code examples if they weren't already included above
-            // and weren't converted to GitHub suggestion blocks
-            if (codeExamples && (!lineSuggestions || Object.keys(lineSuggestions).length === 0)) {
-                // Handle both string and array formats
-                const examples = Array.isArray(codeExamples) ? codeExamples : [codeExamples];
-                
-                // Only show option labels if there are multiple valid approaches
-                const showOptions = examples.length > 1;
-                
-                if (showOptions) {
-                    comment += `**Additional Examples:**\n\n`;
-                }
-                
-                examples.forEach((example, index) => {
-                    if (showOptions) {
-                        comment += `**Option ${index + 1}:**\n`;
-                    }
-                    comment += `\`\`\`javascript\n${example}\n\`\`\`\n\n`;
-                });
+            // Add code examples if provided - but only if they add value beyond the suggestion
+            if (codeExamples && codeExamples.length > 0 && (!lineSuggestions || Object.keys(lineSuggestions).length === 0)) {
+                comment += `**Example:**\n\n`;
+                comment += `\`\`\`javascript\n${codeExamples[0]}\n\`\`\`\n\n`;
             }
             
-            // Add action items without checkboxes
+            // Add action items if provided - keep them actionable and specific
             if (actionItems && actionItems.length > 0) {
-                comment += `**Action Items:**\n`;
+                comment += `**Next Steps:**\n`;
                 actionItems.forEach(item => {
                     comment += `- ${item}\n`;
                 });
                 comment += '\n';
             }
             
-            // Add TLDR for longer comments
-            if (tldr && (comment.length > 500 || comment.split('\n').length > 10)) {
-                comment += `**TLDR:** ${tldr}`;
-            }
-            
-            return comment.trim();
+            return comment;
         }
         
         // Analyze changed files
