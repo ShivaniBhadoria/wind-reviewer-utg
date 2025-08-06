@@ -1,4 +1,4 @@
-# GitHub MCP Tools
+# Wind Reviewer
 
 This repository contains tools for automatically reviewing GitHub pull requests and analyzing repository statistics using the Model Context Protocol (MCP) server integration with GitHub.
 
