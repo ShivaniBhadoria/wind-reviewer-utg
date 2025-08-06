@@ -105,8 +105,9 @@ const server = http.createServer(async (req, res) => {
     }
     // Serve static files
     else {
-        let filePath = pathname === '/' ? '/repo-stats-ui.html' : pathname;
-        filePath = path.join(__dirname, filePath);
+        let filePath = pathname === '/' ? '/index.html' : pathname;
+        // Adjust path to point to frontend directory
+        filePath = path.join(__dirname, '../../frontend', pathname === '/' ? 'index.html' : pathname.substring(1));
         
         // Check if file exists
         fs.access(filePath, fs.constants.F_OK, (err) => {
@@ -157,7 +158,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3003; // Using a different port than the main server
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
     console.log(`Access the repository statistics dashboard at http://localhost:${PORT}/`);

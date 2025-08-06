@@ -1,6 +1,49 @@
-# GitHub PR Review Bot
+# GitHub MCP Tools
 
-This repository contains tools for automatically reviewing GitHub pull requests.
+This repository contains tools for automatically reviewing GitHub pull requests and analyzing repository statistics using the Model Context Protocol (MCP) server integration with GitHub.
+
+## Folder Structure
+
+The repository is organized into the following folders:
+
+* `backend/pr-review/`: Contains tools for automating PR reviews and template compliance checks
+* `backend/stats/`: Contains tools for generating repository statistics
+* `frontend/`: Contains the UI for the repository statistics dashboard
+* `utils/config/`: Contains configuration and token-related utilities
+
+## Helper Scripts
+
+* `server.js`: Main server that serves the frontend files
+* `start-stats-server.js`: Script to start the repository statistics server
+* `run-pr-review.js`: Script to run the PR review tool
+
+## Using the PR Review Tool
+
+The PR review tool uses MCP integration with GitHub to automatically review pull requests and check for template compliance. It can add comments to PRs when issues are found.
+
+```bash
+# Run the PR review tool
+node run-pr-review.js <owner> <repo> <pr-number>
+
+# Example
+node run-pr-review.js octocat hello-world 123
+```
+
+## Using the Repository Statistics Dashboard
+
+1. Start the main server:
+   ```bash
+   node server.js
+   ```
+
+2. Start the stats server (in a separate terminal):
+   ```bash
+   node start-stats-server.js
+   ```
+
+3. Open http://localhost:3001 in your browser to access the dashboard
+
+4. Enter a GitHub repository owner and name to generate statistics
 
 ## Setup Options
 
