@@ -1,45 +1,61 @@
-# Wind Reviewer
+# WindLens AI
 
-This repository contains tools for automatically reviewing GitHub pull requests and analyzing repository statistics using the Model Context Protocol (MCP) server integration with GitHub.
+A powerful GitHub repository analysis and PR review tool leveraging the Model Context Protocol (MCP) server for direct GitHub API integration.
 
 ## Table of Contents
 
+- [Overview](#overview)
 - [Folder Structure](#folder-structure)
 - [Setup Guide](#setup-guide)
 - [Using the PR Review Tool](#using-the-pr-review-tool)
 - [PR Review Format](#pr-review-format)
-- [Using the Repository PR Analytics](#using-the-repository-pr-analytics)
-- [Deployment Options](#deployment-options)
+- [Using the Repository Analytics](#using-the-repository-analytics)
 - [Customizing Reviews](#customizing-reviews)
 - [Troubleshooting](#troubleshooting)
 
+## Overview
+
+WindLens AI provides comprehensive GitHub repository analysis and automated PR reviews through direct integration with GitHub's API via the Model Context Protocol (MCP) server. The tool offers:
+
+- Automated PR reviews with structured, actionable feedback
+- Repository statistics and analytics dashboard
+- Template compliance checking for PRs
+- Code quality insights and improvement suggestions
+
 ## Folder Structure
 
-The repository is organized into the following folders:
+The repository is organized into the following structure:
 
-* `backend/pr-review/`: Contains tools for automating PR reviews and template compliance checks
-  * `direct-pr-review.js`: Main PR review tool with line-specific comments and code suggestions
-  * `pr-review-tool.js`: Core functions for PR review operations
-  * `mcp-pr-review.js`: MCP-specific implementation for PR reviews
-* `backend/stats/`: Contains tools for generating repository statistics
-* `frontend/`: Contains the UI for the repository statistics dashboard
-* `utils/config/`: Contains configuration and token-related utilities
-  * `check-token-permissions.js`: Utility to verify GitHub token permissions
+* `backend/`: Server-side code
+  * `pr-review/`: PR review automation tools
+    * `direct-pr-review.js`: Main PR review tool with line-specific comments
+    * `pr-review-tool.js`: Core PR review functions
+  * `stats/`: Repository statistics tools
+    * `github-stats.js`: GitHub API integration for statistics
+    * `pr-stats.js`: Pull request analytics
+    * `repo-stats.js`: Repository metrics calculation
+    * `repo-stats-server.js`: Server for statistics API
+* `frontend/`: Client-side code
+  * `css/`: Styling for the web interface
+  * `github-api.js`: Frontend GitHub API integration
+  * `index.html`: Main dashboard page
+  * `repo-stats-ui.js`: UI components for repository statistics
+* `utils/`: Utility functions and configuration
+* `.github/`: GitHub-specific files including PR templates
 
 ## Setup Guide
 
 ### Prerequisites
 
 1. Node.js (v14 or higher)
-2. GitHub Personal Access Token with appropriate permissions
-3. Access to the GitHub MCP server
+2. Access to the GitHub MCP server
 
 ### Installation
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/github-mcp.git
-   cd github-mcp
+   git clone https://github.com/yourusername/windlens-ai.git
+   cd windlens-ai
    ```
 
 2. Install dependencies:
@@ -47,26 +63,22 @@ The repository is organized into the following folders:
    npm install
    ```
 
-3. Configure GitHub token:
+3. Configure the application:
    ```bash
-   # Create a .env file with your GitHub token
-   echo "GITHUB_TOKEN=your_token_here" > .env
+   # Create a configuration file if needed
+   cp config.example.js config.js
+   # Edit the config.js file with your settings
    ```
 
-4. Verify token permissions:
+4. Start the application:
    ```bash
-   node utils/config/check-token-permissions.js
-   ```
-
-5. Start the MCP server (required for PR reviews):
-   ```bash
-   # This step depends on your specific MCP server setup
-   # Typically, the MCP server should be running before using the PR review tools
+   # Start the main server
+   node server.js
    ```
 
 ## Using the PR Review Tool
 
-The PR review tool uses MCP integration with GitHub to automatically review pull requests and provide structured feedback with actionable code suggestions.
+WindLens AI uses the GitHub MCP server to automatically review pull requests and provide structured feedback with actionable code suggestions.
 
 ### Basic Usage
 
@@ -75,19 +87,19 @@ The PR review tool uses MCP integration with GitHub to automatically review pull
 node run-pr-review.js <owner> <repo> <pr-number>
 
 # Example
-node run-pr-review.js ShivaniBhadoria personal-finance-simulator 7
+node run-pr-review.js ShivaniBhadoria windlens-ai 7
 ```
 
 ### Review Process Flow
 
-1. **Fetch PR Details**: The tool retrieves the PR information, including title, description, and changed files.
+1. **Fetch PR Details**: WindLens AI retrieves the PR information, including title, description, and changed files directly through the MCP server.
 
-2. **Analyze Code Changes**: It examines the diff for each file to identify potential issues.
+2. **Analyze Code Changes**: It examines the diff for each file to identify potential issues, code quality concerns, and template compliance.
 
 3. **Generate Comments**: For each issue found, it creates a structured comment with:
    - Clear issue description
-   - Context explaining why it matters
-   - Suggestion with reasoning
+   - Context explaining why this matters
+   - Suggestion focused on the "why" not just the "what"
    - GitHub suggestion blocks with directly committable code
    - Next steps for further improvements
 
@@ -95,11 +107,11 @@ node run-pr-review.js ShivaniBhadoria personal-finance-simulator 7
 
 ## PR Review Format
 
-The PR review tool generates comments following a clean, consistent template:
+WindLens AI generates PR reviews following a clean, consistent template that prioritizes clarity and actionability:
 
 ### Inline Comments
 
-Each inline comment follows this structure:
+Each inline comment follows this structured format:
 
 ```markdown
 **Issue:** Clear statement of the code improvement opportunity
@@ -127,7 +139,11 @@ The overall PR review includes:
 3. Recommendations with references to inline comments
 4. Suggested next steps for future enhancements
 
-## Using the Repository PR Analytics
+This format ensures reviews are consistent, helpful, and focused on improving code quality while providing directly actionable suggestions.
+
+## Using the Repository Analytics
+
+WindLens AI provides comprehensive repository analytics through its dashboard interface:
 
 1. Start the main server:
    ```bash
@@ -136,69 +152,71 @@ The overall PR review includes:
 
 2. Start the stats server (in a separate terminal):
    ```bash
-   node start-stats-server.js
+   node backend/stats/repo-stats-server.js
    ```
 
 3. Open http://localhost:3001 in your browser to access the dashboard
 
 4. Enter a GitHub repository owner and name to generate statistics
 
-## Deployment Options
+### Analytics Features
 
-### Option 1: GitHub Actions (Repository-specific)
+The WindLens AI dashboard provides several key insights:
 
-The `.github/workflows/pr-review.yml` file sets up an automated PR review workflow that runs whenever a pull request is opened or updated in the repository.
+* **Pull Request Metrics**: Review time, acceptance rate, and common feedback areas
+* **Code Quality Trends**: Identify patterns in code quality over time
+* **Contributor Analysis**: Understand team contribution patterns and expertise areas
+* **Defect Area Identification**: Highlight parts of the codebase that frequently need attention
+* **PR Guidelines Compliance**: Track adherence to PR templates and guidelines
 
-1. Add the workflow file to your repository
-2. The workflow will automatically run on new PRs
-3. No additional configuration needed - uses the built-in `GITHUB_TOKEN`
-
-### Option 2: GitHub App (Works across all repositories)
-
-For a more powerful solution that works across all your repositories, you can create a GitHub App:
-
-1. Go to your GitHub Settings > Developer settings > GitHub Apps > New GitHub App
-2. Configure the app with these settings:
-   - Name: PR Review Bot
-   - Homepage URL: Your GitHub profile URL
-   - Webhook URL: (Leave blank for now if you don't have a server)
-   - Permissions:
-     - Pull requests: Read & Write
-     - Contents: Read
-   - Subscribe to events:
-     - Pull request
-     - Pull request review
-
-3. After creating the app, you'll need to:
-   - Generate a private key
-   - Install the app on your repositories
-   - Set up a server to handle webhook events (or use a serverless function)
-
-4. Deploy the bot code to your server or serverless function
+All analytics are generated through direct GitHub API integration via the MCP server, eliminating the need for separate API tokens or complex authentication workflows.
 
 ## Customizing Reviews
 
-To customize the review criteria, edit the `direct-pr-review.js` file to add your own checks. Some ideas:
-
-- Check for test coverage
-- Enforce coding standards
-- Look for security issues
-- Ensure documentation is updated
+WindLens AI is designed to be highly customizable. You can tailor the review criteria to match your team's specific needs:
 
 ### Adding Custom Review Rules
 
-Custom review rules can be added in the `addDirectPRComments` function in `direct-pr-review.js`. Each rule should:
+To customize the review criteria, edit the `direct-pr-review.js` file in the `backend/pr-review` directory. You can add checks for:
+
+- Test coverage requirements
+- Coding standards compliance
+- Security vulnerability detection
+- Documentation completeness
+- Performance considerations
+- Accessibility standards
+
+Custom review rules can be added in the `addDirectPRComments` function. Each rule should:
 
 1. Analyze specific aspects of the code
 2. Generate comments using the `formatComment` function
-3. Follow the established template format
+3. Follow the established template format for consistency
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **MCP Server Connection Issues**
-   - Ensure the MCP server is running
+   - Ensure the GitHub MCP server is properly configured and running
+   - Check that your application has the necessary permissions
+
+2. **Dashboard Loading Problems**
+   - Verify both the main server and stats server are running
+   - Check browser console for any JavaScript errors
+   - Ensure your network can access the GitHub API through the MCP server
+
+3. **PR Review Tool Errors**
+   - Confirm you have the correct repository owner and name
+   - Verify the PR number exists and is accessible
+   - Check the console output for detailed error messages
+
+### Getting Help
+
+If you encounter issues not covered here, please:
+
+1. Check the logs for detailed error messages
+2. Review the MCP server documentation for GitHub API integration
+3. Open an issue in the WindLens AI repository with detailed steps to reproduce
    - Verify that global.mcp0_* functions are available
    - Check network connectivity to the MCP server
 
