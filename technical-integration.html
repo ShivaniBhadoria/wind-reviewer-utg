@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Integration: Windsurf, MCP, and GitHub</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+        }
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .flow-diagram {
+            width: 100%;
+            max-width: 900px;
+            margin: 30px auto;
+            display: block;
+        }
+        pre {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 4px;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .tech-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            width: 200px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .tech-item h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .note {
+            background-color: #fffde7;
+            border-left: 5px solid #ffd600;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .diagram-container {
+            overflow-x: auto;
+            margin: 30px 0;
+        }
+        svg {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Technical Integration: Windsurf, MCP, and GitHub</h1>
+    
+    <div class="section">
+        <h2>Technical Stack Overview</h2>
+        
+        <div class="tech-stack">
+            <div class="tech-item">
+                <h3>Frontend</h3>
+                <p>HTML, CSS, JavaScript</p>
+                <p>Chart.js for visualizations</p>
+            </div>
+            
+            <div class="tech-item">
+                <h3>Backend</h3>
+                <p>Node.js</p>
+                <p>Express.js</p>
+            </div>
+            
+            <div class="tech-item">
+                <h3>Integration</h3>
+                <p>MCP (Model Context Protocol)</p>
+                <p>GitHub API</p>
+            </div>
+            
+            <div class="tech-item">
+                <h3>Data Processing</h3>
+                <p>JavaScript</p>
+                <p>Async/Await</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Integration Architecture</h2>
+        
+        <div class="diagram-container">
+            <svg width="900" height="500" viewBox="0 0 900 500">
+                <!-- Architecture Diagram -->
+                
+                <!-- Windsurf Application -->
+                <rect x="50" y="100" width="200" height="100" rx="10" ry="10" fill="#d4e6f1" stroke="#3498db" stroke-width="2"></rect>
+                <text x="150" y="150" text-anchor="middle" font-weight="bold">Windsurf Application</text>
+                <text x="150" y="170" text-anchor="middle" font-size="14">PR Stats Tool</text>
+                
+                <!-- MCP Server -->
+                <rect x="350" y="100" width="200" height="100" rx="10" ry="10" fill="#d5f5e3" stroke="#2ecc71" stroke-width="2"></rect>
+                <text x="450" y="150" text-anchor="middle" font-weight="bold">MCP Server</text>
+                <text x="450" y="170" text-anchor="middle" font-size="14">github-mcp-server</text>
+                
+                <!-- GitHub API -->
+                <rect x="650" y="100" width="200" height="100" rx="10" ry="10" fill="#fadbd8" stroke="#e74c3c" stroke-width="2"></rect>
+                <text x="750" y="150" text-anchor="middle" font-weight="bold">GitHub API</text>
+                <text x="750" y="170" text-anchor="middle" font-size="14">REST & GraphQL</text>
+                
+                <!-- Arrows -->
+                <path d="M250,130 L350,130" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                <path d="M350,170 L250,170" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                
+                <path d="M550,130 L650,130" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                <path d="M650,170 L550,170" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                
+                <!-- Labels -->
+                <text x="300" y="120" text-anchor="middle" font-size="12">MCP Function Calls</text>
+                <text x="300" y="190" text-anchor="middle" font-size="12">Response Data</text>
+                
+                <text x="600" y="120" text-anchor="middle" font-size="12">API Requests</text>
+                <text x="600" y="190" text-anchor="middle" font-size="12">JSON Responses</text>
+                
+                <!-- Flow Details -->
+                <rect x="50" y="250" width="800" height="200" rx="10" ry="10" fill="#f8f9fa" stroke="#95a5a6" stroke-width="2" stroke-dasharray="5,5"></rect>
+                
+                <!-- Flow Step 1 -->
+                <circle cx="150" cy="300" r="20" fill="#3498db" stroke="#2980b9" stroke-width="2"></circle>
+                <text x="150" y="305" text-anchor="middle" fill="white" font-weight="bold">1</text>
+                <text x="180" y="305" text-anchor="start">Windsurf calls MCP function (e.g., mcp0_search_pull_requests)</text>
+                
+                <!-- Flow Step 2 -->
+                <circle cx="150" cy="350" r="20" fill="#2ecc71" stroke="#27ae60" stroke-width="2"></circle>
+                <text x="150" y="355" text-anchor="middle" fill="white" font-weight="bold">2</text>
+                <text x="180" y="355" text-anchor="start">MCP server translates to GitHub API request</text>
+                
+                <!-- Flow Step 3 -->
+                <circle cx="150" cy="400" r="20" fill="#e74c3c" stroke="#c0392b" stroke-width="2"></circle>
+                <text x="150" y="405" text-anchor="middle" fill="white" font-weight="bold">3</text>
+                <text x="180" y="405" text-anchor="start">GitHub API returns JSON data to MCP server</text>
+                
+                <!-- Flow Step 4 -->
+                <circle cx="500" cy="400" r="20" fill="#f39c12" stroke="#d35400" stroke-width="2"></circle>
+                <text x="500" y="405" text-anchor="middle" fill="white" font-weight="bold">4</text>
+                <text x="530" y="405" text-anchor="start">MCP server formats and returns data to Windsurf</text>
+                
+                <!-- Arrowhead definition -->
+                <defs>
+                    <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+                        markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"></path>
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>MCP Tools Used for GitHub Integration</h2>
+        
+        <table>
+            <tr>
+                <th>MCP Function</th>
+                <th>Purpose</th>
+                <th>GitHub API Endpoint</th>
+            </tr>
+            <tr>
+                <td><code>mcp0_search_pull_requests</code></td>
+                <td>Fetch PRs from a repository</td>
+                <td>Search API: <code>/search/issues</code> with <code>is:pr</code> qualifier</td>
+            </tr>
+            <tr>
+                <td><code>mcp0_get_pull_request</code></td>
+                <td>Get detailed PR information</td>
+                <td>Pull Requests API: <code>/repos/{owner}/{repo}/pulls/{pull_number}</code></td>
+            </tr>
+            <tr>
+                <td><code>mcp0_get_pull_request_files</code></td>
+                <td>Get files changed in a PR</td>
+                <td>Pull Requests API: <code>/repos/{owner}/{repo}/pulls/{pull_number}/files</code></td>
+            </tr>
+            <tr>
+                <td><code>mcp0_get_pull_request_comments</code></td>
+                <td>Get PR review comments</td>
+                <td>Pull Requests API: <code>/repos/{owner}/{repo}/pulls/{pull_number}/comments</code></td>
+            </tr>
+            <tr>
+                <td><code>mcp0_get_pull_request_reviews</code></td>
+                <td>Get PR reviews</td>
+                <td>Pull Requests API: <code>/repos/{owner}/{repo}/pulls/{pull_number}/reviews</code></td>
+            </tr>
+            <tr>
+                <td><code>mcp0_list_commits</code></td>
+                <td>Get commits in a repository</td>
+                <td>Commits API: <code>/repos/{owner}/{repo}/commits</code></td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>How MCP Function Calls Work</h2>
+        
+        <h3>1. Windsurf to MCP Server</h3>
+        <pre>
+// Example: Fetching PRs from a repository
+const allPRs = await mcp0_search_pull_requests({
+    query: `repo:${owner}/${repo} is:pr`,
+    perPage: 100
+});
+
+// Example: Getting files changed in a PR
+const files = await mcp0_get_pull_request_files({
+    owner,
+    repo,
+    pullNumber: pr.number
+});</pre>
+        
+        <h3>2. MCP Server to GitHub API</h3>
+        <p>The MCP server translates these function calls into appropriate GitHub API requests:</p>
+        <pre>
+// Internally, MCP server makes requests like:
+fetch('https://api.github.com/search/issues?q=repo:owner/repo+is:pr&per_page=100', {
+    headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+    }
+});</pre>
+        
+        <h3>3. GitHub API to MCP Server</h3>
+        <p>GitHub API returns JSON data to the MCP server:</p>
+        <pre>
+// Example GitHub API response
+{
+  "total_count": 42,
+  "incomplete_results": false,
+  "items": [
+    {
+      "number": 1347,
+      "title": "DEF0720839: Fix buffer button visibility",
+      "state": "open",
+      "created_at": "2025-07-15T17:13:46Z",
+      "updated_at": "2025-07-15T17:26:22Z",
+      "user": {
+        "login": "octocat"
+      },
+      // ... more PR data
+    },
+    // ... more PRs
+  ]
+}</pre>
+        
+        <h3>4. MCP Server to Windsurf</h3>
+        <p>The MCP server formats and returns the data to Windsurf:</p>
+        <pre>
+// Formatted data returned to Windsurf application
+{
+  "items": [
+    {
+      "number": 1347,
+      "title": "DEF0720839: Fix buffer button visibility",
+      "state": "open",
+      "created_at": "2025-07-15T17:13:46Z",
+      "updated_at": "2025-07-15T17:26:22Z",
+      "user": {
+        "login": "octocat"
+      }
+    },
+    // ... more PRs
+  ]
+}</pre>
+    </div>
+    
+    <div class="section">
+        <h2>Data Flow in PR Analysis</h2>
+        
+        <ol>
+            <li><strong>User Request</strong>: User enters repository owner and name in the frontend form</li>
+            <li><strong>Frontend to Backend</strong>: AJAX request to the PR Stats Server</li>
+            <li><strong>Backend to MCP</strong>: Backend makes MCP function calls to fetch GitHub data</li>
+            <li><strong>MCP to GitHub</strong>: MCP server translates calls to GitHub API requests</li>
+            <li><strong>GitHub to MCP</strong>: GitHub API returns JSON data to MCP server</li>
+            <li><strong>MCP to Backend</strong>: MCP server returns formatted data to backend</li>
+            <li><strong>Backend Processing</strong>: Backend processes data to generate statistics</li>
+            <li><strong>Backend to Frontend</strong>: Backend sends processed statistics to frontend</li>
+            <li><strong>Frontend Visualization</strong>: Frontend renders charts and tables</li>
+        </ol>
+    </div>
+    
+    <div class="section">
+        <h2>Technical Implementation Details</h2>
+        
+        <h3>MCP Integration</h3>
+        <p>The Model Context Protocol (MCP) provides a standardized way for Windsurf to interact with external services like GitHub. The integration works as follows:</p>
+        
+        <ul>
+            <li>MCP functions are globally available in the Windsurf environment</li>
+            <li>Each MCP function maps to one or more GitHub API endpoints</li>
+            <li>MCP handles authentication, rate limiting, and response formatting</li>
+            <li>MCP provides a consistent interface regardless of API changes</li>
+        </ul>
+        
+        <div class="note">
+            <strong>Note:</strong> MCP functions are prefixed with <code>mcp0_</code> to indicate they are from the first version of the MCP protocol. The github-mcp-server is the specific MCP server implementation that handles GitHub API integration.
+        </div>
+        
+        <h3>Authentication Flow</h3>
+        <p>Authentication between systems works as follows:</p>
+        
+        <ol>
+            <li>Windsurf application is authenticated with the MCP server</li>
+            <li>MCP server is authenticated with GitHub API using OAuth tokens</li>
+            <li>All API requests include appropriate authentication headers</li>
+            <li>Token management and refresh is handled by the MCP server</li>
+        </ol>
+        
+        <h3>Error Handling</h3>
+        <p>The integration includes robust error handling:</p>
+        
+        <ul>
+            <li>Network errors are caught and reported</li>
+            <li>API rate limiting is managed with exponential backoff</li>
+            <li>Authentication errors trigger token refresh</li>
+            <li>Meaningful error messages are propagated back to the application</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>Performance Considerations</h2>
+        
+        <ul>
+            <li><strong>Pagination</strong>: GitHub API responses are paginated, and MCP handles fetching multiple pages when needed</li>
+            <li><strong>Caching</strong>: Frequently accessed data can be cached to reduce API calls</li>
+            <li><strong>Parallel Processing</strong>: Multiple API calls can be made in parallel using Promise.all</li>
+            <li><strong>Rate Limiting</strong>: GitHub API has rate limits that must be respected</li>
+        </ul>
+        
+        <div class="note">
+            <strong>Performance Tip:</strong> When analyzing large repositories, consider implementing incremental analysis or focusing on recent PRs to avoid hitting API rate limits.
+        </div>
+    </div>
+</body>
+</html>
