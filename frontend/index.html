@@ -58,7 +58,7 @@
 <body>
     <div class="container-fluid stats-container">
         <div class="row mb-4">
-            <div class="col-12">
+            <div class="container mt-4">
                 <h1 class="text-center mb-4">Repository PR Analytics</h1>
                 <div class="card">
                     <div class="card-body">
@@ -218,7 +218,7 @@
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-header">
-                                    Areas with Most Defects
+                                    Areas with Most DEF PRs
                                 </div>
                                 <div class="card-body">
                                     <div class="chart-container">
@@ -230,7 +230,7 @@
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-header">
-                                    Defect Distribution
+                                    DEF PRs Distribution
                                 </div>
                                 <div class="card-body">
                                     <div class="chart-container">
@@ -242,7 +242,7 @@
                     </div>
                     <div class="card mt-4">
                         <div class="card-header">
-                            Defect Areas
+                            DEF PR Areas
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -250,7 +250,7 @@
                                     <thead>
                                         <tr>
                                             <th>Area</th>
-                                            <th>Defect Count</th>
+                                            <th>DEF PR Count</th>
                                             <th>Affected Files</th>
                                         </tr>
                                     </thead>
@@ -309,7 +309,7 @@
                     </div>
                     <div class="card mt-4">
                         <div class="card-header">
-                            PRs Open for More Than 72 Hours
+                            PRs Open for More Than 4 Hours
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -369,7 +369,7 @@
                 <!-- Summary Tab -->
                 <div class="tab-pane fade" id="summary" role="tabpanel">
                     <div class="row">
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <div class="card">
                                 <div class="card-header">
                                     Total Commits
@@ -379,7 +379,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <div class="card">
                                 <div class="card-header">
                                     Total PRs
@@ -389,7 +389,17 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
+                            <div class="card">
+                                <div class="card-header">
+                                    Total Defect PRs
+                                </div>
+                                <div class="card-body text-center">
+                                    <h1 id="totalDefectPRs" class="display-4">-</h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
                             <div class="card">
                                 <div class="card-header">
                                     Total Contributors
