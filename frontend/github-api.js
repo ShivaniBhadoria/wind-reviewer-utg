@@ -296,25 +296,17 @@ async function getRepositoryStatistics(owner, repo) {
   try {
     console.log(`Fetching statistics for ${owner}/${repo}...`);
     
-    // Show loading message
-    document.getElementById('loading-message').textContent = 'Fetching repository data...';
-    document.getElementById('loading-indicator').style.display = 'block';
+    // We're using the main loading indicator now, no need to show a separate one
     
     // Fetch repository data
     const data = await fetchRepositoryData(owner, repo);
     
-    document.getElementById('loading-message').textContent = 'Analyzing repository data...';
-    
     // Analyze repository data
     const stats = await analyzeRepositoryData(owner, repo, data);
     
-    // Hide loading indicator
-    document.getElementById('loading-indicator').style.display = 'none';
-    
     return stats;
   } catch (error) {
-    // Hide loading indicator and show error
-    document.getElementById('loading-indicator').style.display = 'none';
+    // Show error
     document.getElementById('error-message').textContent = `Error: ${error.message}`;
     document.getElementById('error-message').style.display = 'block';
     

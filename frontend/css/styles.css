@@ -135,7 +135,7 @@ input:focus, select:focus, textarea:focus {
     height: 20px;
     border: 3px solid rgba(0, 0, 0, 0.1);
     border-radius: 50%;
-    border-top-color: #0366d6;
+    border-top-color: #65e04e;
     animation: spin 1s ease-in-out infinite;
     margin-right: 10px;
     vertical-align: middle;
@@ -196,8 +196,4 @@ input:focus, select:focus, textarea:focus {
 .badge-error {
     background-color: #ffeef0;
     color: #cb2431;
-}
-
-.stats-content {
-    margin: 30px;
 }

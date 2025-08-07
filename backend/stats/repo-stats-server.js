@@ -161,5 +161,5 @@ const server = http.createServer(async (req, res) => {
 const PORT = process.env.PORT || 3003; // Using a different port than the main server
 server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
-    console.log(`Access the repository statistics dashboard at http://localhost:${PORT}/`);
+    console.log(`Access the Repository PR Analytics at http://localhost:${PORT}/`);
 });
