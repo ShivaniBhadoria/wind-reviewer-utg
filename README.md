@@ -1,4 +1,4 @@
-# GitHub MCP Tools
+# Wind Reviewer
 
 This repository contains tools for automatically reviewing GitHub pull requests and analyzing repository statistics using the Model Context Protocol (MCP) server integration with GitHub.
 
@@ -8,7 +8,7 @@ This repository contains tools for automatically reviewing GitHub pull requests 
 - [Setup Guide](#setup-guide)
 - [Using the PR Review Tool](#using-the-pr-review-tool)
 - [PR Review Format](#pr-review-format)
-- [Using the Repository Statistics Dashboard](#using-the-repository-statistics-dashboard)
+- [Using the Repository PR Analytics](#using-the-repository-pr-analytics)
 - [Deployment Options](#deployment-options)
 - [Customizing Reviews](#customizing-reviews)
 - [Troubleshooting](#troubleshooting)
@@ -127,7 +127,7 @@ The overall PR review includes:
 3. Recommendations with references to inline comments
 4. Suggested next steps for future enhancements
 
-## Using the Repository Statistics Dashboard
+## Using the Repository PR Analytics
 
 1. Start the main server:
    ```bash

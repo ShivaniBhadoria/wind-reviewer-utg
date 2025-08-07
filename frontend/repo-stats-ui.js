@@ -94,6 +94,15 @@ async function fetchRepoStats(owner, repo) {
 function updateUI(stats) {
     const { contributorStats, fileStats, defectStats, prGuidelines, commitStats } = stats;
     
+    // First update summary stats to ensure total PR count is available
+    updateSummaryStats({
+        contributorStats,
+        fileStats,
+        defectStats,
+        prGuidelines,
+        commitStats
+    });
+    
     // Update contributor charts and tables
     updateContributorStats(contributorStats);
     
@@ -103,17 +112,8 @@ function updateUI(stats) {
     // Update defect areas charts and tables
     updateDefectStats(defectStats);
     
-    // Update PR guidelines charts and tables
+    // Update PR guidelines charts and tables after summary stats are updated
     updateGuidelinesStats(prGuidelines);
-    
-    // Update summary stats
-    updateSummaryStats({
-        contributorStats,
-        fileStats,
-        defectStats,
-        prGuidelines,
-        commitStats
-    });
 }
 
 /**
@@ -424,7 +424,52 @@ function updateDefectStats(defectStats) {
  * @param {Object} prGuidelines - PR guidelines statistics
  */
 function updateGuidelinesStats(prGuidelines) {
-    const { exceedsSizeLimit, potentialSplits } = prGuidelines;
+    // Ensure all properties exist with default empty arrays
+    const exceedsSizeLimit = prGuidelines?.exceedsSizeLimit || [];
+    const openTooLong = prGuidelines?.openTooLong || [];
+    const slowFirstReview = prGuidelines?.slowFirstReview || [];
+    const unresolvedComments = prGuidelines?.unresolvedComments || [];
+    
+    // Update PR Guidelines Summary
+    const guidelinesSummary = document.getElementById('guidelinesSummary');
+    guidelinesSummary.innerHTML = '';
+    
+    // Add summary items
+    if (exceedsSizeLimit.length > 0) {
+        const item = document.createElement('li');
+        item.className = 'list-group-item list-group-item-warning';
+        item.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${exceedsSizeLimit.length} PRs exceed size limit`;
+        guidelinesSummary.appendChild(item);
+    }
+    
+    if (openTooLong.length > 0) {
+        const item = document.createElement('li');
+        item.className = 'list-group-item list-group-item-warning';
+        item.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${openTooLong.length} PRs open too long`;
+        guidelinesSummary.appendChild(item);
+    }
+    
+    if (slowFirstReview.length > 0) {
+        const item = document.createElement('li');
+        item.className = 'list-group-item list-group-item-warning';
+        item.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${slowFirstReview.length} PRs with slow first review`;
+        guidelinesSummary.appendChild(item);
+    }
+    
+    if (unresolvedComments.length > 0) {
+        const item = document.createElement('li');
+        item.className = 'list-group-item list-group-item-warning';
+        item.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${unresolvedComments.length} PRs with unresolved comments`;
+        guidelinesSummary.appendChild(item);
+    }
+    
+    if (exceedsSizeLimit.length === 0 && openTooLong.length === 0 && 
+        slowFirstReview.length === 0 && unresolvedComments.length === 0) {
+        const item = document.createElement('li');
+        item.className = 'list-group-item list-group-item-success';
+        item.innerHTML = `<i class="bi bi-check-circle"></i> All PRs follow guidelines`;
+        guidelinesSummary.appendChild(item);
+    }
     
     // Update size limit table
     const sizeTbody = document.querySelector('#sizeLimitTable tbody');
@@ -438,62 +483,150 @@ function updateGuidelinesStats(prGuidelines) {
         exceedsSizeLimit.forEach(pr => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>#${pr.number}</td>
+                <td><a href="https://github.com/${document.getElementById('owner').value}/${document.getElementById('repo').value}/pull/${pr.number}" target="_blank">#${pr.number}</a></td>
                 <td>${pr.title}</td>
-                <td class="guideline-violation">${pr.changes}</td>
+                <td>${pr.changes}</td>
             `;
             sizeTbody.appendChild(row);
         });
     }
     
-    // Update potential splits table
-    const splitsTbody = document.querySelector('#potentialSplitsTable tbody');
-    splitsTbody.innerHTML = '';
+    // Update PRs open too long table
+    const openTooLongTbody = document.querySelector('#openTooLongTable tbody');
+    openTooLongTbody.innerHTML = '';
     
-    if (potentialSplits.length === 0) {
+    if (openTooLong.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="2" class="text-center">No potential splits found</td>`;
-        splitsTbody.appendChild(row);
+        row.innerHTML = `<td colspan="3" class="text-center">No PRs open for more than 72 hours</td>`;
+        openTooLongTbody.appendChild(row);
     } else {
-        potentialSplits.forEach(pr => {
+        openTooLong.forEach(pr => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>#${pr.number}</td>
+                <td><a href="https://github.com/${document.getElementById('owner').value}/${document.getElementById('repo').value}/pull/${pr.number}" target="_blank">#${pr.number}</a></td>
                 <td>${pr.title}</td>
+                <td>${pr.hoursOpen}</td>
             `;
-            splitsTbody.appendChild(row);
+            openTooLongTbody.appendChild(row);
         });
     }
     
-    // Update guidelines summary
-    const guidelinesSummary = document.getElementById('guidelinesSummary');
-    guidelinesSummary.innerHTML = '';
+    // Update slow first review table
+    const slowFirstReviewTbody = document.querySelector('#slowFirstReviewTable tbody');
+    slowFirstReviewTbody.innerHTML = '';
     
-    const sizeItem = document.createElement('li');
-    sizeItem.className = `list-group-item d-flex justify-content-between align-items-center ${exceedsSizeLimit.length > 0 ? 'list-group-item-danger' : 'list-group-item-success'}`;
-    sizeItem.innerHTML = `
-        PRs exceeding size limit (300 lines)
-        <span class="badge bg-${exceedsSizeLimit.length > 0 ? 'danger' : 'success'} rounded-pill">${exceedsSizeLimit.length}</span>
-    `;
-    guidelinesSummary.appendChild(sizeItem);
+    if (slowFirstReview.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="3" class="text-center">No PRs with first review taking more than 24 hours</td>`;
+        slowFirstReviewTbody.appendChild(row);
+    } else {
+        slowFirstReview.forEach(pr => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><a href="https://github.com/${document.getElementById('owner').value}/${document.getElementById('repo').value}/pull/${pr.number}" target="_blank">#${pr.number}</a></td>
+                <td>${pr.title}</td>
+                <td>${pr.hoursToFirstReview}</td>
+            `;
+            slowFirstReviewTbody.appendChild(row);
+        });
+    }
     
-    const splitsItem = document.createElement('li');
-    splitsItem.className = `list-group-item d-flex justify-content-between align-items-center ${potentialSplits.length > 0 ? 'list-group-item-warning' : 'list-group-item-success'}`;
-    splitsItem.innerHTML = `
-        Potential IT and Story PRs that should be clubbed
-        <span class="badge bg-${potentialSplits.length > 0 ? 'warning' : 'success'} rounded-pill">${potentialSplits.length}</span>
-    `;
-    guidelinesSummary.appendChild(splitsItem);
+    // Update unresolved comments table
+    const unresolvedCommentsTbody = document.querySelector('#unresolvedCommentsTable tbody');
+    unresolvedCommentsTbody.innerHTML = '';
     
-    // Update PR size guideline chart
-    const sizeGuidelineCtx = document.getElementById('sizeGuidelineChart').getContext('2d');
+    if (unresolvedComments.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="3" class="text-center">No PRs merged with unresolved comments</td>`;
+        unresolvedCommentsTbody.appendChild(row);
+    } else {
+        unresolvedComments.forEach(pr => {
+            // Create expandable row for PR with unresolved comments
+            const row = document.createElement('tr');
+            row.className = 'pr-row';
+            row.dataset.prNumber = pr.number;
+            row.innerHTML = `
+                <td><a href="https://github.com/${document.getElementById('owner').value}/${document.getElementById('repo').value}/pull/${pr.number}" target="_blank">#${pr.number}</a></td>
+                <td>${pr.title}</td>
+                <td>
+                    ${pr.comments || pr.commentCount}
+                    <button class="btn btn-sm btn-outline-info ms-2 toggle-comments" data-pr-number="${pr.number}">
+                        <i class="bi bi-chevron-down"></i> Details
+                    </button>
+                </td>
+            `;
+            unresolvedCommentsTbody.appendChild(row);
+            
+            // Create hidden detail row for comments
+            if (pr.unresolvedCommentsList && pr.unresolvedCommentsList.length > 0) {
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'comment-details d-none';
+                detailRow.dataset.prNumber = pr.number;
+                
+                let commentsHtml = '<td colspan="3"><div class="p-2 bg-light rounded">';
+                commentsHtml += '<h6 class="mb-3">Unresolved Comments:</h6>';
+                commentsHtml += '<ul class="list-group">';
+                
+                pr.unresolvedCommentsList.forEach(comment => {
+                    const date = new Date(comment.created_at).toLocaleDateString();
+                    commentsHtml += `
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-secondary">${comment.user}</span>
+                                <small>${date}</small>
+                            </div>
+                            <div class="mt-2">${comment.body}</div>
+                            <div class="mt-1 text-muted small">
+                                <code>${comment.path}:${comment.line || 'N/A'}</code>
+                            </div>
+                        </li>
+                    `;
+                });
+                
+                commentsHtml += '</ul></div></td>';
+                detailRow.innerHTML = commentsHtml;
+                unresolvedCommentsTbody.appendChild(detailRow);
+            }
+        });
+        
+        // Add event listeners for toggle buttons
+        document.querySelectorAll('.toggle-comments').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const prNumber = e.target.closest('button').dataset.prNumber;
+                const detailRow = document.querySelector(`.comment-details[data-pr-number="${prNumber}"]`);
+                detailRow.classList.toggle('d-none');
+                
+                // Toggle icon
+                const icon = e.target.closest('button').querySelector('i');
+                if (icon.classList.contains('bi-chevron-down')) {
+                    icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
+                } else {
+                    icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
+                }
+            });
+        });
+    }
+    
+    // Update PR guidelines chart - account for all guideline metrics
+    // Create a Set of non-compliant PR numbers to avoid counting PRs multiple times
+    const nonCompliantPRs = new Set();
+    
+    // Add all PRs that violate any guideline to the set
+    exceedsSizeLimit.forEach(pr => nonCompliantPRs.add(pr.number));
+    openTooLong.forEach(pr => nonCompliantPRs.add(pr.number));
+    slowFirstReview.forEach(pr => nonCompliantPRs.add(pr.number));
+    unresolvedComments.forEach(pr => nonCompliantPRs.add(pr.number));
+    
+    // Get total PR count from the stats data
+    const totalPRs = parseInt(document.getElementById('totalPRs').textContent) || 0;
+    const nonCompliantCount = nonCompliantPRs.size;
+    const compliantCount = totalPRs - nonCompliantCount;
+    
     if (charts.sizeGuideline) {
         charts.sizeGuideline.destroy();
     }
     
-    const compliantCount = exceedsSizeLimit.length;
-    const nonCompliantCount = exceedsSizeLimit.length;
-    
+    const sizeGuidelineCtx = document.getElementById('sizeGuidelineChart').getContext('2d');
     charts.sizeGuideline = new Chart(sizeGuidelineCtx, {
         type: 'doughnut',
         data: {
@@ -514,7 +647,7 @@ function updateGuidelinesStats(prGuidelines) {
                 },
                 title: {
                     display: true,
-                    text: 'PR Size Compliance'
+                    text: 'PR Guidelines Compliance'
                 }
             }
         }
@@ -537,22 +670,35 @@ function updateSummaryStats(stats) {
     const healthSummary = document.getElementById('healthSummary');
     healthSummary.innerHTML = '';
     
-    // Calculate health metrics
-    const exceedsSizeCount = prGuidelines.exceedsSizeLimit.length;
+    // Update size guideline summary
+    const exceedsSizeCount = prGuidelines?.exceedsSizeLimit?.length || 0;
     const totalPRs = contributorStats.contributors.reduce((sum, c) => sum + c.prCount, 0);
-    const sizeComplianceRate = totalPRs > 0 ? ((totalPRs - exceedsSizeCount) / totalPRs * 100).toFixed(1) : 100;
+    const complianceRate = totalPRs > 0 ? ((totalPRs - exceedsSizeCount) / totalPRs * 100).toFixed(1) : 100;
     
-    // Add health metrics
+    const sizeItem = document.createElement('div');
+    sizeItem.className = 'mb-3';
+    sizeItem.innerHTML = `
+        <h6>PR Size Compliance</h6>
+        <div class="progress">
+            <div class="progress-bar ${exceedsSizeCount > 0 ? 'bg-warning' : 'bg-success'}" role="progressbar" style="width: ${complianceRate}%">
+                ${complianceRate}%
+            </div>
+        </div>
+        <small class="text-muted">${totalPRs - exceedsSizeCount} out of ${totalPRs} PRs comply with size guidelines</small>
+    `;
+    healthSummary.appendChild(sizeItem);
+    
+    // Calculate health metrics
+    // Get counts for all PR guideline metrics
+    const openTooLongCount = prGuidelines?.openTooLong?.length || 0;
+    const slowFirstReviewCount = prGuidelines?.slowFirstReview?.length || 0;
+    const unresolvedCommentsCount = prGuidelines?.unresolvedComments?.length || 0;
+    
     const metrics = [
         {
-            name: 'PR Size Compliance',
-            value: `${sizeComplianceRate}%`,
-            status: sizeComplianceRate >= 80 ? 'success' : (sizeComplianceRate >= 60 ? 'warning' : 'danger')
-        },
-        {
             name: 'PR Guidelines Adherence',
-            value: prGuidelines.potentialSplits.length === 0 ? 'Good' : 'Needs Improvement',
-            status: prGuidelines.potentialSplits.length === 0 ? 'success' : 'warning'
+            value: openTooLongCount === 0 && slowFirstReviewCount === 0 && unresolvedCommentsCount === 0 ? 'Good' : 'Needs Improvement',
+            status: openTooLongCount === 0 && slowFirstReviewCount === 0 && unresolvedCommentsCount === 0 ? 'success' : 'warning'
         }
     ];
     
@@ -573,30 +719,52 @@ function updateSummaryStats(stats) {
         healthSummary.appendChild(item);
     });
     
-    // Add recommendations
+    // Generate recommendations
     const recommendations = document.createElement('div');
-    recommendations.className = 'mt-4';
     recommendations.innerHTML = '<h5>Recommendations</h5><ul class="list-group">';
     
+    // We already have these variables defined above, so we'll reuse them
+    // const exceedsSizeCount = prGuidelines?.exceedsSizeLimit?.length || 0;
     if (exceedsSizeCount > 0) {
         recommendations.innerHTML += `
-            <li class="list-group-item list-group-item-warning">
+            <li class="list-group-item list-group-item-danger">
                 <i class="bi bi-exclamation-triangle"></i> 
-                ${exceedsSizeCount} PRs exceed the size limit. Consider breaking them down into smaller, focused changes.
+                ${exceedsSizeCount} PRs exceed the recommended size limit of 300 lines.
             </li>
         `;
     }
     
-    if (prGuidelines.potentialSplits.length > 0) {
+    // We already have this variable defined above
+    if (openTooLongCount > 0) {
+        recommendations.innerHTML += `
+            <li class="list-group-item list-group-item-danger">
+                <i class="bi bi-exclamation-triangle"></i> 
+                ${openTooLongCount} PRs have been open for more than 72 hours.
+            </li>
+        `;
+    }
+    
+    // We already have this variable defined above
+    if (slowFirstReviewCount > 0) {
         recommendations.innerHTML += `
             <li class="list-group-item list-group-item-warning">
-                <i class="bi bi-exclamation-triangle"></i> 
-                ${prGuidelines.potentialSplits.length} potential IT and story PRs should be clubbed together.
+                <i class="bi bi-exclamation-circle"></i> 
+                ${slowFirstReviewCount} PRs had first review taking more than 24 hours.
             </li>
         `;
     }
     
-    if (exceedsSizeCount === 0 && prGuidelines.potentialSplits.length === 0) {
+    // We already have this variable defined above
+    if (unresolvedCommentsCount > 0) {
+        recommendations.innerHTML += `
+            <li class="list-group-item list-group-item-danger">
+                <i class="bi bi-exclamation-triangle"></i> 
+                ${unresolvedCommentsCount} PRs were merged with unresolved comments.
+            </li>
+        `;
+    }
+    
+    if (exceedsSizeCount === 0 && openTooLongCount === 0 && slowFirstReviewCount === 0 && unresolvedCommentsCount === 0) {
         recommendations.innerHTML += `
             <li class="list-group-item list-group-item-success">
                 <i class="bi bi-check-circle"></i> 
@@ -719,9 +887,13 @@ window.getRepoStats = async function(owner, repo) {
         }
         
         // 4. Check PRs against guidelines
+        // Initialize PR guidelines data
         const prGuidelines = {
             exceedsSizeLimit: [],
-            potentialSplits: []
+            openTooLong: [],
+            slowFirstReview: [],
+            unresolvedComments: [],
+            potentialSplits: [] // Adding this for backward compatibility
         };
         
         for (const pr of allPRs.items) {
@@ -743,13 +915,64 @@ window.getRepoStats = async function(owner, repo) {
                 });
             }
             
-            // Check for potential IT and story PRs that should be clubbed
-            if ((pr.title.toLowerCase().includes('it') || pr.title.toLowerCase().includes('test')) && 
-                pr.title.toLowerCase().includes('story')) {
-                prGuidelines.potentialSplits.push({
-                    number: pr.number,
-                    title: pr.title
+            // Get PR details for time-based checks
+            const prDetails = await mcp0_get_pull_request({
+                owner,
+                repo,
+                pullNumber: pr.number
+            });
+            
+            // Check if PR is open for more than 72 hours
+            if (prDetails.state === 'open') {
+                const createdAt = new Date(prDetails.created_at);
+                const now = new Date();
+                const hoursOpen = (now - createdAt) / (1000 * 60 * 60);
+                
+                if (hoursOpen > 72) {
+                    prGuidelines.openTooLong.push({
+                        number: pr.number,
+                        title: pr.title,
+                        hoursOpen: hoursOpen.toFixed(1)
+                    });
+                }
+            }
+            
+            // Check if first review took more than 24 hours
+            const reviews = await mcp0_get_pull_request_reviews({
+                owner,
+                repo,
+                pullNumber: pr.number
+            });
+            
+            if (reviews.length > 0) {
+                const createdAt = new Date(prDetails.created_at);
+                const firstReviewAt = new Date(reviews[0].submitted_at);
+                const hoursToFirstReview = (firstReviewAt - createdAt) / (1000 * 60 * 60);
+                
+                if (hoursToFirstReview > 24) {
+                    prGuidelines.slowFirstReview.push({
+                        number: pr.number,
+                        title: pr.title,
+                        hoursToFirstReview: hoursToFirstReview.toFixed(1)
+                    });
+                }
+            }
+            
+            // Check if PR was merged with unresolved comments
+            if (prDetails.state === 'closed' && prDetails.merged) {
+                const comments = await mcp0_get_pull_request_comments({
+                    owner,
+                    repo,
+                    pullNumber: pr.number
                 });
+                
+                if (comments.length > 0) {
+                    prGuidelines.unresolvedComments.push({
+                        number: pr.number,
+                        title: pr.title,
+                        commentCount: comments.length
+                    });
+                }
             }
         }
         

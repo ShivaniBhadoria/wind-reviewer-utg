@@ -8,7 +8,9 @@ const {
     mcp0_search_pull_requests,
     mcp0_list_commits,
     mcp0_get_pull_request,
-    mcp0_get_pull_request_files
+    mcp0_get_pull_request_files,
+    mcp0_get_pull_request_comments,
+    mcp0_get_pull_request_reviews
 } = globalThis;
 
 /**
@@ -127,9 +129,11 @@ async function getRepoStats(owner, repo) {
         }
         
         // 4. Check PRs against guidelines
-        const prGuidelines = {
+        let prGuidelines = {
             exceedsSizeLimit: [],
-            potentialSplits: []
+            openTooLong: [],
+            slowFirstReview: [],
+            unresolvedComments: []
         };
         
         for (const pr of allPRs.items) {
@@ -151,18 +155,85 @@ async function getRepoStats(owner, repo) {
                 });
             }
             
-            // Check for potential IT and story PRs that should be clubbed
-            if ((pr.title.toLowerCase().includes('it') || pr.title.toLowerCase().includes('test')) && 
-                pr.title.toLowerCase().includes('story')) {
-                prGuidelines.potentialSplits.push({
-                    number: pr.number,
-                    title: pr.title
+            // Check if PR is open for more than 72 hours
+            if (pr.state === 'open') {
+                const created = new Date(pr.created_at);
+                const now = new Date();
+                const hoursOpen = (now - created) / (1000 * 60 * 60);
+                
+                if (hoursOpen > 72) {
+                    prGuidelines.openTooLong.push({
+                        number: pr.number,
+                        title: pr.title,
+                        hoursOpen: hoursOpen.toFixed(1)
+                    });
+                }
+            }
+            
+            // Check if first review took more than 24 hours
+            // Note: This is a simplified check. In a real implementation, you would need to
+            // fetch the PR reviews and check their timestamps
+            if (pr.review_comments > 0 && pr.created_at && pr.updated_at) {
+                const created = new Date(pr.created_at);
+                const firstUpdate = new Date(pr.updated_at);
+                const hoursToFirstReview = (firstUpdate - created) / (1000 * 60 * 60);
+                
+                if (hoursToFirstReview > 24) {
+                    prGuidelines.slowFirstReview.push({
+                        number: pr.number,
+                        title: pr.title,
+                        hoursToFirstReview: hoursToFirstReview.toFixed(1)
+                    });
+                }
+            }
+            
+            // Check for unresolved comments in merged PRs
+            if (pr.merged && pr.review_comments > 0) {
+                // Get PR review comments
+                const prComments = await mcp0_get_pull_request_comments({
+                    owner,
+                    repo,
+                    pullNumber: pr.number
                 });
+                
+                // Get PR reviews
+                const prReviews = await mcp0_get_pull_request_reviews({
+                    owner,
+                    repo,
+                    pullNumber: pr.number
+                });
+                
+                // Find unresolved comments
+                const unresolvedCommentsList = [];
+                prComments.forEach(comment => {
+                    // Check if comment is unresolved
+                    // GitHub marks resolved comments with a specific state or they're referenced in a review
+                    if (!comment.resolved) {
+                        unresolvedCommentsList.push({
+                            id: comment.id,
+                            body: comment.body,
+                            user: comment.user.login,
+                            created_at: comment.created_at,
+                            path: comment.path,
+                            line: comment.line || comment.original_line
+                        });
+                    }
+                });
+                
+                // If there are unresolved comments, add this PR to the list
+                if (unresolvedCommentsList.length > 0) {
+                    prGuidelines.unresolvedComments.push({
+                        number: pr.number,
+                        title: pr.title,
+                        comments: unresolvedCommentsList.length,
+                        unresolvedCommentsList: unresolvedCommentsList
+                    });
+                }
             }
         }
         
         // 5. Format the statistics
-        return {
+        const stats = {
             contributorStats: {
                 contributors: Object.entries(contributors).map(([name, stats]) => ({
                     name,
@@ -177,7 +248,7 @@ async function getRepoStats(owner, repo) {
                     .map(([file, stats]) => ({
                         file,
                         changes: stats.changes,
-                        prCount: stats.prs.length
+                        prCount: stats.prs ? stats.prs.length : 0
                     }))
                     .sort((a, b) => b.changes - a.changes)
                     .slice(0, 10)
@@ -187,20 +258,28 @@ async function getRepoStats(owner, repo) {
                     .map(([area, stats]) => ({
                         area,
                         defectCount: stats.count,
-                        affectedFiles: Array.from(stats.files)
+                        affectedFiles: Array.from(stats.files || [])
                     }))
                     .sort((a, b) => b.defectCount - a.defectCount)
                     .slice(0, 10)
             },
-            prGuidelines: prGuidelines,
+            prGuidelines: {
+                exceedsSizeLimit: prGuidelines.exceedsSizeLimit || [],
+                openTooLong: prGuidelines.openTooLong || [],
+                slowFirstReview: prGuidelines.slowFirstReview || [],
+                unresolvedComments: prGuidelines.unresolvedComments || []
+            },
             commitStats: {
-                totalCommits: commits.length
+                totalCommits: commits && commits.length ? commits.length : 0
             }
         };
         
+        return stats;
+        
         // Output the statistics as JSON
         console.log(JSON.stringify(stats, null, 2));
-        return stats;
+        // Don't return stats twice
+        // return stats;
     } catch (error) {
         console.error('Failed to get repository stats:', error);
         throw error;
@@ -254,34 +333,60 @@ function formatRepoStats(stats) {
     output += `|------|--------------|----------------|\n`;
     
     defectStats.defectAreas.forEach(area => {
-        output += `| ${area.area} | ${area.defectCount} | ${area.affectedFiles.length} |\n`;
+        output += `| ${area.area} | ${area.defectCount} | ${area.affectedFiles ? area.affectedFiles.length : 0} |\n`;
     });
     
     // PR Guidelines
     output += `\n## PR Guidelines Violations\n\n`;
     output += `### PRs Exceeding Size Limit (300 lines)\n\n`;
     
-    if (prGuidelines.exceedsSizeLimit.length === 0) {
+    if (!prGuidelines.exceedsSizeLimit || prGuidelines.exceedsSizeLimit.length === 0) {
         output += `No PRs exceed the size limit.\n\n`;
     } else {
         output += `| PR | Title | Changes |\n`;
         output += `|----|-------|--------|\n`;
         
-        prGuidelines.exceedsSizeLimit.forEach(pr => {
+        (prGuidelines.exceedsSizeLimit || []).forEach(pr => {
             output += `| #${pr.number} | ${pr.title} | ${pr.changes} |\n`;
         });
     }
     
-    output += `\n### Potential IT and Story PRs that should be clubbed\n\n`;
+    output += `\n### PRs Open for More Than 72 Hours\n\n`;
     
-    if (prGuidelines.potentialSplits.length === 0) {
-        output += `No potential splits found.\n\n`;
+    if (!prGuidelines.openTooLong || prGuidelines.openTooLong.length === 0) {
+        output += `No PRs open for more than 72 hours.\n\n`;
     } else {
-        output += `| PR | Title |\n`;
-        output += `|----|-------|\n`;
+        output += `| PR | Title | Hours Open |\n`;
+        output += `|----|-------|------------|\n`;
         
-        prGuidelines.potentialSplits.forEach(pr => {
-            output += `| #${pr.number} | ${pr.title} |\n`;
+        (prGuidelines.openTooLong || []).forEach(pr => {
+            output += `| #${pr.number} | ${pr.title} | ${pr.hoursOpen} |\n`;
+        });
+    }
+    
+    output += `\n### PRs with First Review Taking More Than 24 Hours\n\n`;
+    
+    if (!prGuidelines.slowFirstReview || prGuidelines.slowFirstReview.length === 0) {
+        output += `No PRs with slow first review.\n\n`;
+    } else {
+        output += `| PR | Title | Hours to First Review |\n`;
+        output += `|----|-------|---------------------|\n`;
+        
+        (prGuidelines.slowFirstReview || []).forEach(pr => {
+            output += `| #${pr.number} | ${pr.title} | ${pr.hoursToFirstReview} |\n`;
+        });
+    }
+    
+    output += `\n### PRs Merged with Unresolved Comments\n\n`;
+    
+    if (!prGuidelines.unresolvedComments || prGuidelines.unresolvedComments.length === 0) {
+        output += `No PRs merged with unresolved comments.\n\n`;
+    } else {
+        output += `| PR | Title | Comment Count |\n`;
+        output += `|----|-------|--------------|\n`;
+        
+        (prGuidelines.unresolvedComments || []).forEach(pr => {
+            output += `| #${pr.number} | ${pr.title} | ${pr.comments} |\n`;
         });
     }
     
